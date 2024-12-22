@@ -1,3 +1,4 @@
+import 'react-native-url-polyfill/auto'
 import { StatusBar } from 'expo-status-bar';
 import { Text, View, Image, ScrollView } from 'react-native';
 import { Redirect, router } from 'expo-router';
