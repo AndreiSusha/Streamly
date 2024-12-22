@@ -1,10 +1,11 @@
-import { View, Text, ScrollView, Image } from 'react-native';
+import { View, Text, ScrollView, Image, Alert } from 'react-native';
 import React, { use, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link } from 'expo-router'
+import { Link, router } from 'expo-router'
 import { images } from '../../constants';
 import InputForm from '../../components/InputForm';
 import Button from '../../components/Button';
+import { createUser } from '../../lib/appwrite';
 
 const Register = () => {
   const [form, setForm] = useState({
@@ -15,8 +16,27 @@ const Register = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false)  
 
-  const submit = () => {
-    console.log('submit', form);
+  const submit = async () => {
+    if(!form.username || !form.email || !form.password) {
+      Alert.alert('Error', 'All fields are required')
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await createUser(form.email, form.password, form.username)
+
+      // set it to global state
+
+      router.replace('/home') 
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Failed to create user')
+    } finally {
+      setIsSubmitting(false)
+    }
+
+    createUser()
   };
 
   return (
@@ -52,7 +72,7 @@ const Register = () => {
           />
 
           <Button 
-          title='Log in'
+          title='Register'
           habdlePress={submit}
           containerStyles='mt-10'
           isLoading={isSubmitting}
