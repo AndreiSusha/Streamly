@@ -6,6 +6,7 @@ import { images } from '../../constants';
 import InputForm from '../../components/InputForm';
 import Button from '../../components/Button';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_IP = process.env.EXPO_PUBLIC_API_BASE_URL;
 
@@ -30,10 +31,18 @@ const LogIn = () => {
         password: form.password,
       });
 
+      const userData = response.data.user;
+
+      // Save user data to AsyncStorage
+      await AsyncStorage.setItem('userId', userData.id);
+      await AsyncStorage.setItem('username', userData.username);
+      await AsyncStorage.setItem('email', userData.email);
+
+
       // Display success message
       Alert.alert('Success', response.data.msg);
 
-      // Navigate to home screen or other authenticated route
+      // Navigate to home screen
       router.replace('/home');
     } catch (error) {
       console.error(error);
