@@ -5,6 +5,9 @@ import { Link } from 'expo-router'
 import { images } from '../../constants';
 import InputForm from '../../components/InputForm';
 import Button from '../../components/Button';
+import axios from 'axios';
+
+const API_IP = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 const LogIn = () => {
   const [form, setForm] = useState({
@@ -14,8 +17,31 @@ const LogIn = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false)  
 
-  const submit = () => {
-    console.log('submit', form);
+  const submit = async () => {
+    if (!form.email || !form.password) {
+      return Alert.alert('Error', 'All fields are required');
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await axios.post(`${API_IP}login`, {
+        email: form.email,
+        password: form.password,
+      });
+
+      // Display success message
+      Alert.alert('Success', response.data.msg);
+
+      // Navigate to home screen or other authenticated route
+      router.replace('/home');
+    } catch (error) {
+      console.error(error);
+      const errorMsg = error.response?.data?.msg || 'Login failed. Please try again.';
+      Alert.alert('Error', errorMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -25,7 +51,7 @@ const LogIn = () => {
           <Image
             source={images.logo}
             resizeMode="contain"
-            className="w-[115px] h-[35px]"
+            className="w-[130px] h-[84px]"
           />
           <Text className="text-2xl text-white text-semibold mt-10 font-psemibold">
             Log in to Streamly
@@ -43,6 +69,7 @@ const LogIn = () => {
             value={form.password}
             handleChangeText={(e) => setForm({ ...form, password: e })}
             otherStyles="mt-7"
+            secureTextEntry
           />
 
           <Button 
@@ -54,7 +81,7 @@ const LogIn = () => {
 
           <View className='justify-center pt-5 flex-row gap-2'>
             <Text className='text-gray-100 text-lg font-pregular'>Don’t have an account?</Text>
-            <Link href='/register' className='text-lg text-secondary font-psemibold'>Register</Link>
+            <Link href='/register' className='text-lg text-secondary font-psemibold'>Sign up</Link>
           </View>
         </View>
       </ScrollView>

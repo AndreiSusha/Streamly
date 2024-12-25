@@ -1,11 +1,13 @@
 import { View, Text, ScrollView, Image, Alert } from 'react-native';
-import React, { use, useState } from 'react';
+import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, router } from 'expo-router'
 import { images } from '../../constants';
 import InputForm from '../../components/InputForm';
 import Button from '../../components/Button';
-import { createUser } from '../../lib/appwrite';
+import axios from 'axios';
+
+const API_IP = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 const Register = () => {
   const [form, setForm] = useState({
@@ -17,36 +19,42 @@ const Register = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)  
 
   const submit = async () => {
-    if(!form.username || !form.email || !form.password) {
-      Alert.alert('Error', 'All fields are required')
+    // Check if any field is empty
+    if (!form.username || !form.email || !form.password) {
+      return Alert.alert('Error', 'All fields are required');
     }
 
     setIsSubmitting(true);
 
     try {
-      const result = await createUser(form.email, form.password, form.username)
+      // Create a new user
+      const response = await axios.post(`${API_IP}register`, form);
 
-      // set it to global state
-
-      router.replace('/home') 
+      // Check if the user was created successfully
+      if (response.status === 201) {
+        Alert.alert('Success', 'User registered successfully');
+        router.replace('/home');
+      } else {
+        throw new Error(response.data.message || 'Registration failed');
+      }
     } catch (error) {
-      console.error(error);
-      Alert.alert('Error', 'Failed to create user')
+      console.error('Registration Error:', error);
+      const errorMessage =
+        error.response?.data?.message || error.message || 'Failed to create user';
+      Alert.alert('Error', errorMessage);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-
-    createUser()
   };
 
   return (
     <SafeAreaView className="flex-1" style={{ backgroundColor: '#161622' }}>
       <ScrollView contentContainerStyle={{ height: '100%' }}>
-        <View className="w-full justify-center min-h-[85vh] px-4 ">
+        <View className="w-full justify-center min-h-[90vh] px-4 ">
           <Image
             source={images.logo}
             resizeMode="contain"
-            className="w-[115px] h-[35px]"
+            className="w-[130px] h-[84px]"
           />
           <Text className="text-2xl text-white text-semibold mt-10 font-psemibold">
             Sign up to Streamly
@@ -69,10 +77,11 @@ const Register = () => {
             value={form.password}
             handleChangeText={(e) => setForm({ ...form, password: e })}
             otherStyles="mt-7"
+            secureTextEntry
           />
 
           <Button 
-          title='Register'
+          title='Sign up'
           habdlePress={submit}
           containerStyles='mt-10'
           isLoading={isSubmitting}
