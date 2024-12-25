@@ -1,7 +1,7 @@
-import { View, Text, ScrollView, Image } from 'react-native';
+import { View, Text, ScrollView, Image, Alert } from 'react-native';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link } from 'expo-router'
+import { Link, router } from 'expo-router'
 import { images } from '../../constants';
 import InputForm from '../../components/InputForm';
 import Button from '../../components/Button';
@@ -74,7 +74,7 @@ const LogIn = () => {
 
           <Button 
           title='Log in'
-          habdlePress={submit}
+          handlePress={submit}
           containerStyles='mt-10'
           isLoading={isSubmitting}
           />

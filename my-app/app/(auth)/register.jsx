@@ -82,7 +82,7 @@ const Register = () => {
 
           <Button 
           title='Sign up'
-          habdlePress={submit}
+          handlePress={submit}
           containerStyles='mt-10'
           isLoading={isSubmitting}
           />
