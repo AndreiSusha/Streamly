@@ -4,6 +4,8 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
 const User = require('./models/User');
+const Media = require('./models/Media');
+const multer = require('multer');
 
 require('dotenv').config();
 
@@ -14,6 +16,106 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error('Error connecting to MongoDB:', err));
+
+// Multer setup
+// limits for file size
+const upload = multer({
+  limits: {
+    fileSize: 10 * 1024 * 1024, // limit file size to 10MB
+  },
+  storage: multer.memoryStorage(), // store files in memory as buffers
+});
+
+// Upload API
+app.post('/upload', upload.single('file'), async (req, res) => {
+  try {
+    const { title, userId } = req.body; // Get title and user ID from request body
+
+    // Check if title and user ID are provided
+    if (!title || !userId) {
+      return res.status(400).json({ msg: 'Title and User ID are required' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ msg: 'No file uploaded' });
+    }
+
+    const { originalname, mimetype, buffer } = req.file;
+
+    // Check if the user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    // Create a new media object
+    const newMedia = new Media({
+      title,
+      filename: originalname,
+      mediatype: mimetype,
+      image: buffer,
+      user: userId, // Assign the user ID to the media object
+    });
+
+    // Save the media object to the database
+    await newMedia.save();
+
+    res.status(201).json({
+      msg: 'Media uploaded successfully',
+      media: {
+        id: newMedia._id,
+        title: newMedia.title,
+        filename: newMedia.filename,
+        mediatype: newMedia.mediatype,
+        user: newMedia.user,
+        createdAt: newMedia.createdAt,
+        updatedAt: newMedia.updatedAt,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get all media files
+app.get('/media/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Check if the user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    // Find all media files uploaded by the user
+    const mediaFiles = await Media.find({ user: userId }).select('-image');
+    res.status(200).json(mediaFiles);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get a single media file by ID
+app.get('/media/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const mediaFile = await Media.findById(id);
+
+    if (!mediaFile) {
+      return res.status(404).json({ msg: 'Media file not found' });
+    }
+
+    // Return the file content
+    res.set('Content-Type', mediaFile.mediatype);
+    res.send(mediaFile.image);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 // Register API
 app.post('/register', async (req, res) => {
