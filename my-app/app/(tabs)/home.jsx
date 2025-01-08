@@ -61,7 +61,7 @@ const Home = () => {
         data={data}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
-          <MediaCard title={item.title} filename={item.filename} user={item.user} />
+          <MediaCard title={item.title} filename={item.filename} username={item.user?.username} avatar={item.user?.avatar || 'https://via.placeholder.com/46'} />
           // <View>
           //   <Text className="text-3xl text-white">{item.title}</Text>
           // </View>
