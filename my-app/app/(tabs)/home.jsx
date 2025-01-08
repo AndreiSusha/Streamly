@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, Text, FlatList, Image, RefreshControl, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  Image,
+  RefreshControl,
+  Alert,
+} from 'react-native';
 
 import { images } from '../../constants';
 import { StatusBar } from 'expo-status-bar';
@@ -8,6 +15,7 @@ import { SearchInput, Carousel, EmptyState, MediaCard } from '../../components';
 
 const Home = () => {
   const [data, setData] = useState([]);
+  const [latestMedia, setLatestMedia] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -26,13 +34,29 @@ const Home = () => {
     return await response.json();
   };
 
+  const fetchLatestMediaFiles = async () => {
+    const response = await fetch('http://192.168.1.241:3000/media/latest?limit=7', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch latest media files');
+    }
+
+    return await response.json();
+  };
+
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
       try {
-        const response = await mediaFiles();
-        console.log(response);
-        setData(response);
+        setIsLoading(true);
+        const allMedia = await mediaFiles();
+        const latest = await fetchLatestMediaFiles();
+        setData(allMedia);
+        setLatestMedia(latest);
       } catch (error) {
         Alert.alert('Error', error.message);
       } finally {
@@ -46,8 +70,10 @@ const Home = () => {
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      const response = await mediaFiles();
-      setData(response);
+      const allMedia = await mediaFiles();
+      const latest = await fetchLatestMediaFiles();
+      setData(allMedia);
+      setLatestMedia(latest);
     } catch (error) {
       Alert.alert('Error', error.message);
     } finally {
@@ -61,10 +87,12 @@ const Home = () => {
         data={data}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
-          <MediaCard title={item.title} filename={item.filename} username={item.user?.username} avatar={item.user?.avatar || 'https://via.placeholder.com/46'} />
-          // <View>
-          //   <Text className="text-3xl text-white">{item.title}</Text>
-          // </View>
+          <MediaCard
+            title={item.title}
+            filename={item.filename}
+            username={item.user?.username}
+            avatar={item.user?.avatar || 'https://via.placeholder.com/46'}
+          />
         )}
         ListHeaderComponent={() => (
           <View className="px-4 my-6 space-y-6">
@@ -91,7 +119,7 @@ const Home = () => {
                 Latest Videos
               </Text>
 
-              <Carousel posts={[{ id: 1 }, { id: 2 }, { id: 3 }] ?? []} />
+              <Carousel posts={latestMedia} />
             </View>
           </View>
         )}
