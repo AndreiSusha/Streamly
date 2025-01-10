@@ -1,10 +1,8 @@
-import { useState } from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 
 import { icons } from '../constants';
 
 const MediaCard = ({ title, filename, username, avatar }) => {
-  const [play, setPlay] = useState(false);
   return (
     <View className="flex-col items-center px-4 mb-14">
       <View className="flex-row items-start gap-3">
@@ -36,25 +34,16 @@ const MediaCard = ({ title, filename, username, avatar }) => {
         </View>
       </View>
 
-      {play ? (
-        <Text className="text-white">Playing</Text>
-      ) : (
-        <TouchableOpacity 
+      <TouchableOpacity
         activeOpacity={0.7}
-        onPress={() => setPlay(true)}
-        className="w-full h-60 rounded-xl mt-3 relative flex justify-center items-center">
-          <Image
-            source={{ uri: filename }}
-            className="w-full h-full rounded-xl mt-3"
-            resizeMode="cover"
-          />
-          <Image
-            source={icons.play}
-            className="w-12 h-12 absolute"
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-      )}
+        className="w-full h-60 rounded-xl mt-3 relative flex justify-center items-center"
+      >
+        <Image
+          source={{ uri: filename }}
+          className="w-full h-full rounded-xl mt-3"
+          resizeMode="cover"
+        />
+      </TouchableOpacity>
     </View>
   );
 };
