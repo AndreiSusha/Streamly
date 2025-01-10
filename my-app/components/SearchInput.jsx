@@ -21,7 +21,7 @@ const SearchInput = ({ initialQuery }) => {
         if (query === "")
           return Alert.alert(
             "Missing Query",
-            "Please input something to search results across database"
+            "Enter something to search for amazing things"
           );
 
         if (pathname.startsWith("/search")) router.setParams({ query });
