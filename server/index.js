@@ -135,6 +135,33 @@ app.get('/media/latest', async (req, res) => {
   }
 });
 
+// Search media files by title
+app.get('/media/search', async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    if (!query) {
+      return res.status(400).json({ msg: 'Query parameter is required.' });
+    }
+
+    const mediaFiles = await Media.find({
+      title: { $regex: query, $options: 'i' }, // Search case-insensitive
+    }).populate('user', 'username email');
+
+    if (mediaFiles.length === 0) {
+      return res
+        .status(404)
+        .json({ msg: 'No media found matching the query.' });
+    }
+
+    const transformedMedia = mediaFiles.map(transformMedia);
+    res.status(200).json(transformedMedia);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error.' });
+  }
+});
+
 // Get all media files
 app.get('/media', async (req, res) => {
   try {
