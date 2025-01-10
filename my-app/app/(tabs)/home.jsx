@@ -125,7 +125,7 @@ const Home = () => {
         )}
         ListEmptyComponent={() => (
           <EmptyState
-            title="No Videos Found"
+            title="No Posts Found"
             subtitle="Be the first to upload a video"
           />
         )}
