@@ -19,7 +19,7 @@ const EmptyState = ({ title, subtitle }) => {
       </Text>
 
       <Button
-        title="Create Video"
+        title="Create Magic"
         handlePress={() => router.push("/home")}
         containerStyles="w-full my-5"
       />
