@@ -1,11 +1,12 @@
 import { View, Text, ScrollView, Image, Alert } from 'react-native';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link, router } from 'expo-router'
+import { Link, router } from 'expo-router';
 import { images } from '../../constants';
 import InputForm from '../../components/InputForm';
 import Button from '../../components/Button';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
 
 const API_IP = process.env.EXPO_PUBLIC_API_BASE_URL;
 
@@ -16,7 +17,7 @@ const Register = () => {
     password: '',
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false)  
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submit = async () => {
     // Check if any field is empty
@@ -32,6 +33,14 @@ const Register = () => {
 
       // Check if the user was created successfully
       if (response.status === 201) {
+        
+        const userData = response.data.user;
+
+        // Save user data to AsyncStorage
+        await AsyncStorage.setItem('userId', userData.id);
+        await AsyncStorage.setItem('username', userData.username);
+        await AsyncStorage.setItem('email', userData.email);
+
         Alert.alert('Success', 'User registered successfully');
         router.replace('/home');
       } else {
@@ -40,7 +49,7 @@ const Register = () => {
     } catch (error) {
       console.error('Registration Error:', error);
       const errorMessage =
-        error.response?.data?.message || error.message || 'Failed to create user';
+        error.response?.data?.msg || error.message || 'Failed to create user';
       Alert.alert('Error', errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -81,10 +90,10 @@ const Register = () => {
           />
 
           <Button 
-          title='Sign up'
-          handlePress={submit}
-          containerStyles='mt-10'
-          isLoading={isSubmitting}
+            title='Sign up'
+            handlePress={submit}
+            containerStyles='mt-10'
+            isLoading={isSubmitting}
           />
 
           <View className='justify-center pt-5 flex-row gap-2'>
