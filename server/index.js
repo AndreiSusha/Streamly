@@ -4,6 +4,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const dotenv = require('dotenv');
 const multer = require('multer');
+const jwt = require('jsonwebtoken');
 const User = require('./models/User');
 const Media = require('./models/Media');
 
@@ -25,6 +26,9 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB file size limit
 });
 
+// Token blacklist
+const tokenBlacklist = new Set();
+
 // Helper function to transform media data
 const transformMedia = (media) => ({
   _id: media._id,
@@ -33,6 +37,30 @@ const transformMedia = (media) => ({
   mediatype: media.mediatype,
   user: media.user,
 });
+
+// Middleware to verify token
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ msg: 'Access denied, token missing!' });
+  }
+
+  if (tokenBlacklist.has(token)) {
+    return res
+      .status(401)
+      .json({ msg: 'Token is no longer valid (logged out).' });
+  }
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) {
+      return res.status(403).json({ msg: 'Invalid token.' });
+    }
+    req.user = user; // Attach user data to request
+    next();
+  });
+};
 
 // User registration
 app.post('/register', async (req, res) => {
@@ -76,11 +104,37 @@ app.post('/login', async (req, res) => {
       return res.status(400).json({ msg: 'Invalid credentials.' });
     }
 
-    res.status(200).json({ msg: 'Login successful.', user });
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: '1h', // Token valid for 1 hour
+      }
+    );
+
+    res.status(200).json({ msg: 'Login successful.', token });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server error.' });
   }
+});
+
+// User logout
+app.post('/logout', authenticateToken, (req, res) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token) {
+    tokenBlacklist.add(token); // Add token to blacklist
+    return res.status(200).json({ msg: 'Logged out successfully.' });
+  }
+
+  res.status(400).json({ msg: 'Token is required for logout.' });
+});
+
+// Protected route example
+app.get('/protected', authenticateToken, (req, res) => {
+  res.status(200).json({ msg: 'This is a protected route.', user: req.user });
 });
 
 // Media routes
