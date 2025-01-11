@@ -27,7 +27,7 @@ const LogIn = () => {
 
     try {
       const response = await axios.post(`${API_IP}login`, {
-        email: form.email,
+        email: form.email.toLowerCase(),
         password: form.password,
       });
 
@@ -36,14 +36,12 @@ const LogIn = () => {
 
       // Save the data to AsyncStorage
       await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('userId', userData.id); 
-      await AsyncStorage.setItem('username', userData.username); 
-      await AsyncStorage.setItem('email', userData.email); 
+      await AsyncStorage.setItem('userId', userData.id);
+      await AsyncStorage.setItem('username', userData.username);
+      await AsyncStorage.setItem('email', userData.email);
 
-      
       Alert.alert('Success', response.data.msg);
 
-      
       router.replace('/home');
     } catch (error) {
       console.error(error);
