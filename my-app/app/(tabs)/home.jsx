@@ -22,10 +22,12 @@ const Home = () => {
   const [currentUser, setCurrentUser] = useState(null);
 
   const mediaFiles = async () => {
+    const token = await AsyncStorage.getItem('token');
     const response = await fetch('http://192.168.1.241:3000/media', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
     });
 
@@ -37,10 +39,12 @@ const Home = () => {
   };
 
   const fetchLatestMediaFiles = async () => {
+    const token = await AsyncStorage.getItem('token');
     const response = await fetch('http://192.168.1.241:3000/media/latest?limit=7', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
     });
 

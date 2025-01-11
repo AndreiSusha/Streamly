@@ -183,7 +183,9 @@ app.get('/users/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// Media routes
+// MEDIA ROUTES
+
+// Create a new media file
 app.post('/media', upload.single('file'), async (req, res) => {
   try {
     const { title, userId } = req.body;
@@ -218,11 +220,12 @@ app.post('/media', upload.single('file'), async (req, res) => {
 });
 
 // Get latest media files
-app.get('/media/latest', async (req, res) => {
+app.get('/media/latest', authenticateToken, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 7;
+    const userId = req.user.id; // Get user ID from token
 
-    const latestMediaFiles = await Media.find()
+    const latestMediaFiles = await Media.find({ user: userId })
       .sort({ createdAt: -1 })
       .limit(limit)
       .populate('user', 'username email');
@@ -263,9 +266,13 @@ app.get('/media/search', async (req, res) => {
 });
 
 // Get all media files
-app.get('/media', async (req, res) => {
+app.get('/media', authenticateToken, async (req, res) => {
   try {
-    const mediaFiles = await Media.find().populate('user', 'username email');
+    const userId = req.user.id; // Get user ID from token
+    const mediaFiles = await Media.find({ user: userId }).populate(
+      'user',
+      'username email'
+    );
 
     const transformedMedia = mediaFiles.map(transformMedia);
     res.status(200).json(transformedMedia);
