@@ -82,7 +82,14 @@ app.post('/register', async (req, res) => {
     const user = new User({ username, email, password: hashedPassword });
     await user.save();
 
-    res.status(201).json({ msg: 'User registered successfully.' });
+    return res.status(201).json({
+      msg: 'User registered successfully.',
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server error.' });
@@ -108,11 +115,20 @@ app.post('/login', async (req, res) => {
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
       {
-        expiresIn: '1h', // Token valid for 1 hour
+        expiresIn: '2h', // Token valid for 2 hour
       }
     );
 
-    res.status(200).json({ msg: 'Login successful.', token });
+    // Send token and user data
+    return res.status(200).json({
+      msg: 'Login successful.',
+      token: token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+      },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server error.' });
