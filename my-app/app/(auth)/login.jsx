@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, Image, Alert } from 'react-native';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link, router } from 'expo-router'
+import { Link, router } from 'expo-router';
 import { images } from '../../constants';
 import InputForm from '../../components/InputForm';
 import Button from '../../components/Button';
@@ -16,7 +16,7 @@ const LogIn = () => {
     password: '',
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false)  
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const submit = async () => {
     if (!form.email || !form.password) {
@@ -31,22 +31,24 @@ const LogIn = () => {
         password: form.password,
       });
 
+      const token = response.data.token;
       const userData = response.data.user;
 
-      // Save user data to AsyncStorage
-      await AsyncStorage.setItem('userId', userData.id);
-      await AsyncStorage.setItem('username', userData.username);
-      await AsyncStorage.setItem('email', userData.email);
+      // Save the data to AsyncStorage
+      await AsyncStorage.setItem('token', token);
+      await AsyncStorage.setItem('userId', userData.id); 
+      await AsyncStorage.setItem('username', userData.username); 
+      await AsyncStorage.setItem('email', userData.email); 
 
-
-      // Display success message
+      
       Alert.alert('Success', response.data.msg);
 
-      // Navigate to home screen
+      
       router.replace('/home');
     } catch (error) {
       console.error(error);
-      const errorMsg = error.response?.data?.msg || 'Login failed. Please try again.';
+      const errorMsg =
+        error.response?.data?.msg || 'Login failed. Please try again.';
       Alert.alert('Error', errorMsg);
     } finally {
       setIsSubmitting(false);
@@ -81,16 +83,23 @@ const LogIn = () => {
             secureTextEntry
           />
 
-          <Button 
-          title='Log in'
-          handlePress={submit}
-          containerStyles='mt-10'
-          isLoading={isSubmitting}
+          <Button
+            title="Log in"
+            handlePress={submit}
+            containerStyles="mt-10"
+            isLoading={isSubmitting}
           />
 
-          <View className='justify-center pt-5 flex-row gap-2'>
-            <Text className='text-gray-100 text-lg font-pregular'>Don’t have an account?</Text>
-            <Link href='/register' className='text-lg text-secondary font-psemibold'>Sign up</Link>
+          <View className="justify-center pt-5 flex-row gap-2">
+            <Text className="text-gray-100 text-lg font-pregular">
+              Don’t have an account?
+            </Text>
+            <Link
+              href="/register"
+              className="text-lg text-secondary font-psemibold"
+            >
+              Sign up
+            </Link>
           </View>
         </View>
       </ScrollView>
