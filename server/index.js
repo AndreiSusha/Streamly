@@ -65,7 +65,8 @@ const authenticateToken = (req, res, next) => {
 // User registration
 app.post('/register', async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, password } = req.body;
+    const email = req.body.email.toLowerCase();
 
     if (!username || !email || !password) {
       return res.status(400).json({ msg: 'All fields are required.' });
@@ -82,8 +83,18 @@ app.post('/register', async (req, res) => {
     const user = new User({ username, email, password: hashedPassword });
     await user.save();
 
+    // Generate token after registration
+    const token = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: '1h', // Token valid for 1 hour
+      }
+    );
+
     return res.status(201).json({
       msg: 'User registered successfully.',
+      token: token, // Send token back to client
       user: {
         id: user._id,
         username: user.username,
@@ -100,8 +111,9 @@ app.post('/register', async (req, res) => {
 app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    const lowercaseEmail = email.toLowerCase();
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: lowercaseEmail });
     if (!user) {
       return res.status(404).json({ msg: 'User not found.' });
     }
@@ -115,7 +127,7 @@ app.post('/login', async (req, res) => {
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
       {
-        expiresIn: '2h', // Token valid for 2 hour
+        expiresIn: '1h', // Token valid for 1 hour
       }
     );
 
@@ -151,6 +163,24 @@ app.post('/logout', authenticateToken, (req, res) => {
 // Protected route example
 app.get('/protected', authenticateToken, (req, res) => {
   res.status(200).json({ msg: 'This is a protected route.', user: req.user });
+});
+
+// Get user by ID
+app.get('/users/:id', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found.' });
+    }
+    res.status(200).json({
+      id: user._id,
+      username: user.username,
+      email: user.email,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error.' });
+  }
 });
 
 // Media routes

@@ -28,18 +28,24 @@ const Register = () => {
     setIsSubmitting(true);
 
     try {
+      const registrationData = {
+        username: form.username,
+        email: form.email.toLowerCase(),
+        password: form.password
+      };
       // Create a new user
-      const response = await axios.post(`${API_IP}register`, form);
+      const response = await axios.post(`${API_IP}register`, registrationData);
 
       // Check if the user was created successfully
       if (response.status === 201) {
         
         const userData = response.data.user;
-
+        const token = response.data.token;
         // Save user data to AsyncStorage
         await AsyncStorage.setItem('userId', userData.id);
         await AsyncStorage.setItem('username', userData.username);
         await AsyncStorage.setItem('email', userData.email);
+        await AsyncStorage.setItem('token', token);
 
         Alert.alert('Success', 'User registered successfully');
         router.replace('/home');

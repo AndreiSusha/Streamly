@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { images } from '../../constants';
 import { StatusBar } from 'expo-status-bar';
@@ -18,6 +19,7 @@ const Home = () => {
   const [latestMedia, setLatestMedia] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const mediaFiles = async () => {
     const response = await fetch('http://192.168.1.241:3000/media', {
@@ -28,7 +30,7 @@ const Home = () => {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch media files');
+      return [];
     }
 
     return await response.json();
@@ -49,14 +51,39 @@ const Home = () => {
     return await response.json();
   };
 
+  const fetchCurrentUser = async () => {
+    const userId = await AsyncStorage.getItem('userId');
+    const token = await AsyncStorage.getItem('token'); 
+    if (!userId || !token) {
+      throw new Error('User ID or token not found.');
+    }
+  
+    const response = await fetch(`http://192.168.1.241:3000/users/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+    });
+  
+    if (!response.ok) {
+      throw new Error('Failed to fetch user data.');
+    }
+  
+    return await response.json();
+  };
+  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
         const allMedia = await mediaFiles();
         const latest = await fetchLatestMediaFiles();
+        const user = await fetchCurrentUser();
         setData(allMedia);
         setLatestMedia(latest);
+        setCurrentUser(user);
       } catch (error) {
         Alert.alert('Error', error.message);
       } finally {
@@ -72,8 +99,10 @@ const Home = () => {
     try {
       const allMedia = await mediaFiles();
       const latest = await fetchLatestMediaFiles();
+      const user = await fetchCurrentUser();
       setData(allMedia);
       setLatestMedia(latest);
+      setCurrentUser(user);
     } catch (error) {
       Alert.alert('Error', error.message);
     } finally {
@@ -101,7 +130,7 @@ const Home = () => {
                 <Text className="text-sm font-pmedium text-gray-100">
                   Welcome back!
                 </Text>
-                <Text className="text-2xl font-psemibold text-white">User</Text>
+                <Text className="text-2xl font-psemibold text-white">{currentUser ? currentUser.username : "User"}</Text>
               </View>
 
               <View className="mt-1.5">
