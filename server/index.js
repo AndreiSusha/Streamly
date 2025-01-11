@@ -193,6 +193,39 @@ app.get('/media/:id', async (req, res) => {
   }
 });
 
+// Get media files by user ID
+app.get('/media/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Check if the user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found.' });
+    }
+
+    // Get all media files for the user
+    const mediaFiles = await Media.find({ user: userId }).populate(
+      'user',
+      'username email'
+    );
+
+    if (mediaFiles.length === 0) {
+      return res
+        .status(404)
+        .json({ msg: 'No media files found for this user.' });
+    }
+
+    // Transform the media data
+    const transformedMedia = mediaFiles.map(transformMedia);
+
+    res.status(200).json(transformedMedia);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error.' });
+  }
+});
+
 // Update a media file by ID
 app.put('/media/:id', upload.single('file'), async (req, res) => {
   try {
