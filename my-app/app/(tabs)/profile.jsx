@@ -135,7 +135,7 @@ const Profile = () => {
                 titleStyles="text-xl"
                 containerStyles="mr-10"
               />
-              <InfoBox title="1.7k" subtitle="Followers" titleStyles="text-xl" />
+              <InfoBox title="555" subtitle="Followers" titleStyles="text-xl" />
             </View>
           </View>
         )}
