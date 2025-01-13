@@ -14,6 +14,7 @@
     "expo": "~52.0.19",
     "expo-av": "^15.0.1",
     "expo-constants": "~17.0.3",
+    "expo-document-picker": "~13.0.2",
     "expo-linking": "~7.0.3",
     "expo-router": "~4.0.13",
     "expo-status-bar": "~2.0.0",
