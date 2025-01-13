@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Alert, View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { router } from 'expo-router';
@@ -19,16 +19,26 @@ const Create = () => {
   });
 
   const openPicker = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: ['image/jpeg', 'image/png', 'image/jpg'],
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images, 
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
 
-    if (!result.canceled) {
-      setForm({ ...form, image: result });
-    } 
-    // else {
-    //   Alert.alert('Error', 'No file selected');
-    // }
+      if (!result.canceled) {
+        setForm({
+          ...form,
+          image: result.assets[0], 
+        });
+      } else {
+        Alert.alert('Error', 'No image selected');
+      }
+    } catch (error) {
+      console.error('Error opening image picker:', error);
+      Alert.alert('Error', 'Failed to open image picker');
+    }
   };
 
   const submit = async () => {
@@ -49,8 +59,8 @@ const Create = () => {
       formData.append('userId', userId);
       formData.append('file', {
         uri: form.image.uri,
-        type: form.image.mimeType || 'image/jpeg',
-        name: form.image.name,
+        type: form.image.type || 'image/jpeg',
+        name: form.image.fileName || 'photo.jpg', 
       });
 
       const response = await axios.post(`${API_IP}media`, formData, {
@@ -61,7 +71,7 @@ const Create = () => {
 
       Alert.alert('Success', response.data.msg);
       setForm({ title: '', image: null });
-      router.push("/home");
+      router.push('/home');
     } catch (error) {
       console.error(error);
       Alert.alert('Error', error.response?.data?.msg || 'Failed to upload media');
