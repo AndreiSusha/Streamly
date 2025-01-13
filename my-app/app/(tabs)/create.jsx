@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { router } from 'expo-router';
 
 import { icons } from '../../constants';
 import { Button, InputForm } from '../../components';
@@ -19,14 +20,15 @@ const Create = () => {
 
   const openPicker = async () => {
     const result = await DocumentPicker.getDocumentAsync({
-      type: ['image/jpeg', 'image/png'],
+      type: ['image/jpeg', 'image/png', 'image/jpg'],
     });
 
     if (!result.canceled) {
       setForm({ ...form, image: result });
-    } else {
-      Alert.alert('Error', 'No file selected');
-    }
+    } 
+    // else {
+    //   Alert.alert('Error', 'No file selected');
+    // }
   };
 
   const submit = async () => {
@@ -59,6 +61,7 @@ const Create = () => {
 
       Alert.alert('Success', response.data.msg);
       setForm({ title: '', image: null });
+      router.push("/home");
     } catch (error) {
       console.error(error);
       Alert.alert('Error', error.response?.data?.msg || 'Failed to upload media');
