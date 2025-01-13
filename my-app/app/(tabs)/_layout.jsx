@@ -14,7 +14,8 @@ const TabIcon = ({ icon, color, name, focused }) => {
         className="w-6 h-6"
       />
       <Text
-        className={`${focused ? 'font-psemibold' : 'font-pregular'} text-xs`} style={{color: color}}
+        className={`${focused ? 'font-psemibold' : 'font-pregular'} text-xs`}
+        style={{ color: color }}
       >
         {name}
       </Text>
@@ -33,9 +34,9 @@ const TabsLayout = () => {
           tabBarStyle: {
             backgroundColor: '#161622',
             borderTopWidth: 1,
-           borderTopColor: '#232533',
-           height: 94,
-           paddingTop: 10,
+            borderTopColor: '#232533',
+            height: 94,
+            paddingTop: 10,
           },
         }}
       >
@@ -54,22 +55,7 @@ const TabsLayout = () => {
             ),
           }}
         />
-         <Tabs.Screen
-          name="bookmark"
-          options={{
-            title: 'Bookmark',
-            headerShown: false,
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon
-                icon={icons.bookmark}
-                color={color}
-                name="Bookmark"
-                focused={focused}
-              />
-            ),
-          }}
-        />
-         <Tabs.Screen
+        <Tabs.Screen
           name="create"
           options={{
             title: 'Create',
@@ -84,7 +70,7 @@ const TabsLayout = () => {
             ),
           }}
         />
-         <Tabs.Screen
+        <Tabs.Screen
           name="profile"
           options={{
             title: 'Profile',
