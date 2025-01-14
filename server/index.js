@@ -161,9 +161,9 @@ app.post('/logout', authenticateToken, (req, res) => {
 });
 
 // Protected route example
-app.get('/protected', authenticateToken, (req, res) => {
-  res.status(200).json({ msg: 'This is a protected route.', user: req.user });
-});
+// app.get('/protected', authenticateToken, (req, res) => {
+//   res.status(200).json({ msg: 'This is a protected route.', user: req.user });
+// });
 
 // Get user by ID
 app.get('/users/:id', authenticateToken, async (req, res) => {
@@ -176,6 +176,38 @@ app.get('/users/:id', authenticateToken, async (req, res) => {
       id: user._id,
       username: user.username,
       email: user.email,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error.' });
+  }
+});
+
+// Update profile picture
+app.put('/users/:id/avatar', upload.single('avatar'), async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    if (!req.file) {
+      return res.status(400).json({ msg: 'Avatar file is required.' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found.' });
+    }
+
+    user.avatar = req.file.buffer;
+    await user.save();
+
+    res.status(200).json({
+      msg: 'Avatar updated successfully.',
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        avatar: `data:image/jpeg;base64,${user.avatar.toString('base64')}`,
+      },
     });
   } catch (err) {
     console.error(err);
@@ -334,44 +366,62 @@ app.get('/media/user/:userId', async (req, res) => {
 });
 
 // Update a media file by ID
-app.put('/media/:id', upload.single('file'), async (req, res) => {
-  try {
-    const { title } = req.body;
-    const media = await Media.findById(req.params.id);
+app.put(
+  '/media/:id/edit',
+  authenticateToken,
+  upload.single('file'),
+  async (req, res) => {
+    try {
+      const { title } = req.body;
+      const mediaId = req.params.id;
 
-    if (!media) {
-      return res.status(404).json({ msg: 'Media not found.' });
+      const media = await Media.findById(mediaId);
+      if (!media) {
+        return res.status(404).json({ msg: 'Media not found.' });
+      }
+
+      if (media.user.toString() !== req.user.id) {
+        return res
+          .status(403)
+          .json({ msg: 'Not authorized to edit this media.' });
+      }
+
+      if (title) media.title = title;
+      if (req.file) {
+        media.filename = req.file.originalname;
+        media.mediatype = req.file.mimetype;
+        media.image = req.file.buffer;
+      }
+
+      await media.save();
+      res.status(200).json({
+        msg: 'Media updated successfully.',
+        media: transformMedia(media),
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ msg: 'Server error.' });
     }
-
-    if (title) media.title = title;
-
-    if (req.file) {
-      media.filename = req.file.originalname;
-      media.mediatype = req.file.mimetype;
-      media.image = req.file.buffer;
-    }
-
-    await media.save();
-
-    res.status(200).json({
-      msg: 'Media updated successfully.',
-      media: transformMedia(media),
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Server error.' });
   }
-});
+);
 
 // Delete a media file by ID
-app.delete('/media/:id', async (req, res) => {
+app.delete('/media/:id', authenticateToken, async (req, res) => {
   try {
-    const media = await Media.findByIdAndDelete(req.params.id);
+    const mediaId = req.params.id;
 
+    const media = await Media.findById(mediaId);
     if (!media) {
       return res.status(404).json({ msg: 'Media not found.' });
     }
 
+    if (media.user.toString() !== req.user.id) {
+      return res
+        .status(403)
+        .json({ msg: 'Not authorized to delete this media.' });
+    }
+
+    await Media.findByIdAndDelete(mediaId);
     res.status(200).json({ msg: 'Media deleted successfully.' });
   } catch (err) {
     console.error(err);
