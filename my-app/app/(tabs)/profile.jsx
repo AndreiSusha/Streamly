@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { View, FlatList, Alert, Image, TouchableOpacity } from 'react-native';
+import { View, FlatList, Alert, Image, TouchableOpacity, Text } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { InfoBox, EmptyState, MediaCard } from '../../components';
@@ -17,12 +17,15 @@ const Profile = () => {
       const userId = await AsyncStorage.getItem('userId');
       if (!userId) throw new Error('User ID not found.');
 
-      const response = await fetch(`http://192.168.1.241:3000/media/user/${userId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `http://192.168.1.241:3000/media/user/${userId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
         return [];
@@ -79,14 +82,14 @@ const Profile = () => {
   };
 
   //   const logout = async () => {
-//     try {
-//       // Clear all AsyncStorage data
-//       await AsyncStorage.clear();
-//       router.replace('/login');
-//     } catch (error) {
-//       Alert.alert('Error', 'Failed to log out.');
-//     }
-//   };
+  //     try {
+  //       // Clear all AsyncStorage data
+  //       await AsyncStorage.clear();
+  //       router.replace('/login');
+  //     } catch (error) {
+  //       Alert.alert('Error', 'Failed to log out.');
+  //     }
+  //   };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -115,21 +118,34 @@ const Profile = () => {
             title={item.title}
             filename={item.filename}
             username={item.user?.username}
-            avatar={item.user?.avatar || 'https://via.placeholder.com/46'}
+            avatar={item.user?.avatar}
           />
         )}
         ListHeaderComponent={() => (
           <View className="w-full justify-center items-center mt-6 mb-12 px-4">
-            <TouchableOpacity className="w-full items-end mb-10" onPress={logout}>
-              <Image source={icons.logout} resizeMode="contain" className="w-6 h-6" />
+            <TouchableOpacity
+              className="w-full items-end mb-10"
+              onPress={logout}
+            >
+              <Image
+                source={icons.logout}
+                resizeMode="contain"
+                className="w-6 h-6"
+              />
             </TouchableOpacity>
 
             <View className="w-16 h-16 border border-secondary rounded-lg flex justify-center items-center">
-              <Image
-                source={{ uri: user?.avatar || 'https://via.placeholder.com/46' }}
-                className="w-[90%] h-[90%] rounded-lg"
-                resizeMode="cover"
-              />
+              {user?.username ? (
+                <View className="w-full h-full bg-gray-400 rounded-lg flex justify-center items-center">
+                  <Text className="text-white text-xl font-bold">{user.username.charAt(0).toUpperCase()}</Text>
+                </View>
+              ) : (
+                <Image
+                  source={require('../../assets/images/placeholder.png')}
+                  className="w-[90%] h-[90%] rounded-lg"
+                  resizeMode="cover"
+                />
+              )}
             </View>
 
             <InfoBox
