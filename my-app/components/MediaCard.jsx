@@ -1,9 +1,27 @@
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Alert } from 'react-native';
 import { icons } from '../constants';
+import ActionSheet from 'react-native-action-sheet';
 
-const MediaCard = ({ title, filename, username, avatar }) => {
+const MediaCard = ({ title, filename, username, avatar, mediaId, onDelete, onEdit }) => {
   
   const getInitials = (name) => (name ? name.charAt(0).toUpperCase() : '?');
+
+  const showActionSheet = () => {
+    const options = ['Edit', 'Delete', 'Cancel'];
+    ActionSheet.showActionSheetWithOptions(
+      {
+        options,
+        cancelButtonIndex: 2,
+      },
+      (buttonIndex) => {
+        if (buttonIndex === 0) {
+          onEdit(mediaId, title); // call onEdit function
+        } else if (buttonIndex === 1) {
+          onDelete(mediaId); // call onDelete function
+        }
+      }
+    );
+  };
 
   return (
     <View className="flex-col items-center px-4 mb-14">
@@ -38,7 +56,9 @@ const MediaCard = ({ title, filename, username, avatar }) => {
           </View>
         </View>
         <View className="pt-2">
-          <Image source={icons.menu} className="w-5 h-5" resizeMode="contain" />
+          <TouchableOpacity onPress={showActionSheet}>
+            <Image source={icons.menu} className="w-5 h-5" resizeMode="contain" />
+          </TouchableOpacity>
         </View>
       </View>
 
