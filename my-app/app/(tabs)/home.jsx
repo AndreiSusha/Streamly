@@ -7,8 +7,12 @@ import {
   Image,
   RefreshControl,
   Alert,
+  Modal,
+  TextInput,
+  Button,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ActionSheet from 'react-native-action-sheet';
 
 import { images } from '../../constants';
 import { StatusBar } from 'expo-status-bar';
@@ -19,6 +23,9 @@ const Home = () => {
   const [latestMedia, setLatestMedia] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [currentMediaId, setCurrentMediaId] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
 
   const mediaFiles = async () => {
@@ -116,6 +123,96 @@ const Home = () => {
     }
   };
 
+  const handleEdit = async () => {
+    if (newTitle && newTitle !== '') {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const response = await fetch(
+          `http://192.168.1.241:3000/media/${currentMediaId}/edit`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ title: newTitle }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to update media.');
+        }
+
+        const updatedMedia = await response.json();
+        setData((prevData) =>
+          prevData.map((item) =>
+            item._id === currentMediaId ? updatedMedia.media : item
+          )
+        );
+        setModalVisible(false);
+        setNewTitle(''); // Clear the input
+      } catch (error) {
+        Alert.alert('Error', error.message);
+      }
+    }
+  };
+
+  const handleDelete = async (mediaId) => {
+    Alert.alert('Delete Media', 'Are you sure you want to delete this media?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        onPress: async () => {
+          try {
+            const token = await AsyncStorage.getItem('token');
+            const response = await fetch(
+              `http://192.168.1.241:3000/media/${mediaId}`,
+              {
+                method: 'DELETE',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            if (!response.ok) {
+              throw new Error('Failed to delete media.');
+            }
+
+            // Update the data state to remove the deleted media
+            setData((prevData) => prevData.filter((item) => item._id !== mediaId));
+          } catch (error) {
+            Alert.alert('Error', error.message);
+          }
+        },
+      },
+    ]);
+  };
+
+  const openEditModal = (mediaId, currentTitle) => {
+    setCurrentMediaId(mediaId);
+    setNewTitle(currentTitle);
+    setModalVisible(true);
+  };
+
+  const showActionSheet = (mediaId, title) => {
+    const options = ['Edit', 'Delete', 'Cancel'];
+    ActionSheet.showActionSheetWithOptions(
+      {
+        options,
+        cancelButtonIndex: 2,
+      },
+      (buttonIndex) => {
+        if (buttonIndex === 0) {
+          openEditModal(mediaId, title); // call openEditModal instead of onEdit
+        } else if (buttonIndex === 1) {
+          handleDelete(mediaId); // call handleDelete function
+        }
+      }
+    );
+  };
+
   return (
     <SafeAreaView style={{ backgroundColor: '#161622', height: '100%' }}>
       <FlatList
@@ -127,6 +224,9 @@ const Home = () => {
             filename={item.filename}
             username={item.user?.username}
             avatar={item.user?.avatar || null}
+            mediaId={item._id}
+            onDelete={handleDelete}
+            onEdit={() => showActionSheet(item._id, item.title)}
           />
         )}
         ListHeaderComponent={() => (
@@ -171,6 +271,32 @@ const Home = () => {
         }
       />
       <StatusBar backgroundColor="#161622" style="light" />
+      {/* Modal for Editing Title */}
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={modalVisible}
+              onRequestClose={() => setModalVisible(false)}
+            >
+              <View
+                style={{
+                  marginTop: 50,
+                  padding: 20,
+                  backgroundColor: 'white',
+                  borderRadius: 10,
+                }}
+              >
+                <Text>Edit Title</Text>
+                <TextInput
+                  value={newTitle}
+                  onChangeText={setNewTitle}
+                  placeholder="Enter new title"
+                  style={{ borderBottomWidth: 1, marginBottom: 20 }}
+                />
+                <Button title="Save" onPress={handleEdit} />
+                <Button title="Cancel" onPress={() => setModalVisible(false)} />
+              </View>
+            </Modal>
     </SafeAreaView>
   );
 };
