@@ -40,7 +40,7 @@ const LogIn = () => {
       await AsyncStorage.setItem('username', userData.username);
       await AsyncStorage.setItem('email', userData.email);
 
-      Alert.alert('Success', response.data.msg);
+      console.log('Success', response.data.msg);
 
       router.replace('/home');
     } catch (error) {
