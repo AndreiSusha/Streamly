@@ -160,11 +160,6 @@ app.post('/logout', authenticateToken, (req, res) => {
   res.status(400).json({ msg: 'Token is required for logout.' });
 });
 
-// Protected route example
-// app.get('/protected', authenticateToken, (req, res) => {
-//   res.status(200).json({ msg: 'This is a protected route.', user: req.user });
-// });
-
 // Get user by ID
 app.get('/users/:id', authenticateToken, async (req, res) => {
   try {
@@ -182,49 +177,6 @@ app.get('/users/:id', authenticateToken, async (req, res) => {
     res.status(500).json({ msg: 'Server error.' });
   }
 });
-
-// Update profile picture
-// app.put(
-//   '/users/:id/avatar',
-//   upload.single('avatar'),
-//   authenticateToken,
-//   async (req, res) => {
-//     try {
-//       const userId = req.params.id;
-
-//       if (!req.file) {
-//         return res.status(400).json({ msg: 'Avatar file is required.' });
-//       }
-
-//       if (req.user.id !== userId) {
-//         return res
-//           .status(403)
-//           .json({ msg: 'You are not authorized to update this avatar.' });
-//       }
-
-//       const user = await User.findById(userId);
-//       if (!user) {
-//         return res.status(404).json({ msg: 'User not found.' });
-//       }
-
-//       user.avatar = req.file.buffer;
-//       await user.save();
-
-//       res.status(200).json({
-//         msg: 'Avatar updated successfully.',
-//         user: {
-//           id: user._id,
-//           username: user.username,
-//           email: user.email,
-//           avatar: `data:image/jpeg;base64,${user.avatar.toString('base64')}`, // Base64 для аватара
-//         },
-//       });
-//     } catch (err) {
-//       console.error(err);
-//       res.status(500).json({ msg: 'Server error.' });
-//     }
-//   }
-// );
 
 // MEDIA ROUTES
 
