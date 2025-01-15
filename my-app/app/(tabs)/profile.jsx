@@ -59,7 +59,7 @@ const Profile = () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
       const token = await AsyncStorage.getItem('token');
-      if (!userId || !token) throw new Error('User ID or token not found.');
+      if (!userId || !token) return [];
   
       const response = await fetch(
         `http://192.168.1.241:3000/media/user/${userId}`,
@@ -73,7 +73,9 @@ const Profile = () => {
       );
   
       if (!response.ok) {
-        throw new Error('Failed to fetch media files');
+        console.error('Failed to fetch media files', response.status);
+      return [];
+
       }
   
       return await response.json();
@@ -208,8 +210,7 @@ const Profile = () => {
             }
 
             // Update the data state to remove the deleted media
-            const updatedData = await fetchUserMediaFiles();
-            setData(updatedData);
+            setData((prevData) => prevData.filter((item) => item._id !== mediaId));
           } catch (error) {
             Alert.alert('Error', error.message);
           }

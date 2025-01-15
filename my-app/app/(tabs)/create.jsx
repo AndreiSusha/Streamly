@@ -69,7 +69,8 @@ const Create = () => {
         },
       });
 
-      Alert.alert('Success', response.data.msg);
+      // Alert.alert('Success', response.data.msg);
+      console.log(response.data.msg);
       setForm({ title: '', image: null });
       router.push('/home');
     } catch (error) {
