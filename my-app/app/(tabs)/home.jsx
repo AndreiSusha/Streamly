@@ -27,7 +27,7 @@ const Home = () => {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -40,13 +40,16 @@ const Home = () => {
 
   const fetchLatestMediaFiles = async () => {
     const token = await AsyncStorage.getItem('token');
-    const response = await fetch('http://192.168.1.241:3000/media/latest?limit=7', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-    });
+    const response = await fetch(
+      'http://192.168.1.241:3000/media/latest?limit=7',
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
     if (!response.ok) {
       throw new Error('Failed to fetch latest media files');
@@ -57,26 +60,25 @@ const Home = () => {
 
   const fetchCurrentUser = async () => {
     const userId = await AsyncStorage.getItem('userId');
-    const token = await AsyncStorage.getItem('token'); 
+    const token = await AsyncStorage.getItem('token');
     if (!userId || !token) {
       throw new Error('User ID or token not found.');
     }
-  
+
     const response = await fetch(`http://192.168.1.241:3000/users/${userId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
     });
-  
+
     if (!response.ok) {
       throw new Error('Failed to fetch user data.');
     }
-  
+
     return await response.json();
   };
-  
 
   useEffect(() => {
     const fetchData = async () => {
@@ -124,7 +126,7 @@ const Home = () => {
             title={item.title}
             filename={item.filename}
             username={item.user?.username}
-            avatar={item.user?.avatar || 'https://via.placeholder.com/46'}
+            avatar={item.user?.avatar || null}
           />
         )}
         ListHeaderComponent={() => (
@@ -134,7 +136,9 @@ const Home = () => {
                 <Text className="text-sm font-pmedium text-gray-100">
                   Welcome back!
                 </Text>
-                <Text className="text-2xl font-psemibold text-white">{currentUser ? currentUser.username : "User"}</Text>
+                <Text className="text-2xl font-psemibold text-white">
+                  {currentUser ? currentUser.username : 'User'}
+                </Text>
               </View>
 
               <View className="mt-1.5">
