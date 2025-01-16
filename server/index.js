@@ -263,11 +263,9 @@ app.get('/media/search', async (req, res) => {
 // Get all media files
 app.get('/media', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.id; // Get user ID from token
-    const mediaFiles = await Media.find({ user: userId }).populate(
-      'user',
-      'username email'
-    );
+    const mediaFiles = await Media.find()
+      .sort({ createdAt: -1 })
+      .populate('user', 'username email');
 
     const transformedMedia = mediaFiles.map(transformMedia);
     res.status(200).json(transformedMedia);
@@ -319,7 +317,17 @@ app.get('/media/user/:userId', async (req, res) => {
     }
 
     // Transform the media data
-    const transformedMedia = mediaFiles.map(transformMedia);
+    // const transformedMedia = mediaFiles.map(transformMedia);
+    const transformedMedia = mediaFiles.map((media) => ({
+      _id: media._id,
+      title: media.title,
+      filename: `data:${media.mediatype};base64,${media.image.toString(
+        'base64'
+      )}`,
+      mediatype: media.mediatype,
+      user: media.user,
+      createdAt: media.createdAt, // Добавьте поле createdAt
+    }));
 
     res.status(200).json(transformedMedia);
   } catch (err) {
