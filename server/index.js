@@ -218,9 +218,8 @@ app.post('/media', upload.single('file'), async (req, res) => {
 app.get('/media/latest', authenticateToken, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 7;
-    const userId = req.user.id; // Get user ID from token
 
-    const latestMediaFiles = await Media.find({ user: userId })
+    const latestMediaFiles = await Media.find()
       .sort({ createdAt: -1 })
       .limit(limit)
       .populate('user', 'username email');
