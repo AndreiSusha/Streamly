@@ -2,11 +2,13 @@ import { View, Text, Image, TouchableOpacity, Alert } from 'react-native';
 import { icons } from '../constants';
 import ActionSheet from 'react-native-action-sheet';
 
-const MediaCard = ({ title, filename, username, avatar, mediaId, onDelete, onEdit }) => {
-  
+const MediaCard = ({ title, filename, username, avatar, mediaId, onDelete, onEdit, ownerId, currentUser }) => {
+  const isOwner = currentUser && currentUser.id === ownerId;
+  // console.log('MediaCard:', { title, username, avatar, mediaId, ownerId, currentUser });
   const getInitials = (name) => (name ? name.charAt(0).toUpperCase() : '?');
 
   const showActionSheet = () => {
+    if (!isOwner) return; 
     const options = ['Edit', 'Delete', 'Cancel'];
     ActionSheet.showActionSheetWithOptions(
       {
@@ -14,10 +16,10 @@ const MediaCard = ({ title, filename, username, avatar, mediaId, onDelete, onEdi
         cancelButtonIndex: 2,
       },
       (buttonIndex) => {
-        if (buttonIndex === 0) {
-          onEdit(mediaId, title); // call onEdit function
-        } else if (buttonIndex === 1) {
-          onDelete(mediaId); // call onDelete function
+        if (buttonIndex === 0 && onEdit) {
+          onEdit(mediaId, title);
+        } else if (buttonIndex === 1 && onDelete) {
+          onDelete(mediaId);
         }
       }
     );
@@ -55,11 +57,13 @@ const MediaCard = ({ title, filename, username, avatar, mediaId, onDelete, onEdi
             </Text>
           </View>
         </View>
+        {isOwner && (
         <View className="pt-2">
           <TouchableOpacity onPress={showActionSheet}>
             <Image source={icons.menu} className="w-5 h-5" resizeMode="contain" />
           </TouchableOpacity>
         </View>
+        )}
       </View>
 
       <TouchableOpacity
