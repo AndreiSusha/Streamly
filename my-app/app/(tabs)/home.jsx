@@ -28,63 +28,86 @@ const Home = () => {
   const [currentMediaId, setCurrentMediaId] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
 
+  // Fetch all media files
   const mediaFiles = async () => {
-    const token = await AsyncStorage.getItem('token');
-    const response = await fetch('http://192.168.1.241:3000/media', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      return [];
-    }
-
-    return await response.json();
-  };
-
-  const fetchLatestMediaFiles = async () => {
-    const token = await AsyncStorage.getItem('token');
-    const response = await fetch(
-      'http://192.168.1.241:3000/media/latest?limit=7',
-      {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await fetch('http://192.168.1.241:3000/media', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
+      });
+
+      if (!response.ok) {
+        return [];
       }
-    );
+      const mediaFiles = await response.json();
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch latest media files');
+      return mediaFiles.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+    } catch (error) {
+      console.log('Error', error.message);
+      return [];
     }
-
-    return await response.json();
   };
 
+  // Fetch latest media files
+  const fetchLatestMediaFiles = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await fetch(
+        'http://192.168.1.241:3000/media/latest?limit=7',
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.log('Failed to fetch latest media files');
+      return [];
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.log('Error fetching latest media:', error.message);
+      throw error;
+    }
+  };
+
+  // Fetch current user details
   const fetchCurrentUser = async () => {
-    const userId = await AsyncStorage.getItem('userId');
-    const token = await AsyncStorage.getItem('token');
-    if (!userId || !token) {
-      throw new Error('User ID or token not found.');
+    try {
+      const userId = await AsyncStorage.getItem('userId');
+      const token = await AsyncStorage.getItem('token');
+      if (!userId || !token) {
+        throw new Error('User ID or token not found.');
+      }
+
+      const response = await fetch(`http://192.168.1.241:3000/users/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.log('Failed to fetch user data.');
+        return [];
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.log('Error fetching user:', error.message);
+      throw error;
     }
-
-    const response = await fetch(`http://192.168.1.241:3000/users/${userId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch user data.');
-    }
-
-    return await response.json();
   };
 
   useEffect(() => {
@@ -95,8 +118,10 @@ const Home = () => {
         const latest = await fetchLatestMediaFiles();
         const user = await fetchCurrentUser();
         setData(allMedia);
+        // console.log('Fetched media files:', allMedia);
         setLatestMedia(latest);
         setCurrentUser(user);
+        // console.log('Current user:', user);
       } catch (error) {
         Alert.alert('Error', error.message);
       } finally {
@@ -181,7 +206,9 @@ const Home = () => {
             }
 
             // Update the data state to remove the deleted media
-            setData((prevData) => prevData.filter((item) => item._id !== mediaId));
+            setData((prevData) =>
+              prevData.filter((item) => item._id !== mediaId)
+            );
           } catch (error) {
             Alert.alert('Error', error.message);
           }
@@ -196,12 +223,18 @@ const Home = () => {
     setModalVisible(true);
   };
 
-  const showActionSheet = (mediaId, title) => {
-    const options = ['Edit', 'Delete', 'Cancel'];
+  const showActionSheet = (mediaId, title, ownerId) => {
+    const options = [];
+    // Check if the current user is the owner of the media
+    if (currentUser && currentUser._id === ownerId) {
+      options.push('Edit', 'Delete');
+    }
+    options.push('Cancel');
+
     ActionSheet.showActionSheetWithOptions(
       {
         options,
-        cancelButtonIndex: 2,
+        cancelButtonIndex: options.length - 1,
       },
       (buttonIndex) => {
         if (buttonIndex === 0) {
@@ -226,7 +259,11 @@ const Home = () => {
             avatar={item.user?.avatar || null}
             mediaId={item._id}
             onDelete={handleDelete}
-            onEdit={() => showActionSheet(item._id, item.title)}
+            onEdit={(mediaId, title) =>
+              showActionSheet(mediaId, title, item.user?._id)
+            }
+            ownerId={item.user?._id}
+            currentUser={currentUser}
           />
         )}
         ListHeaderComponent={() => (
@@ -272,31 +309,28 @@ const Home = () => {
       />
       <StatusBar backgroundColor="#161622" style="light" />
       {/* Modal for Editing Title */}
-            <Modal
-              animationType="slide"
-              transparent={true}
-              visible={modalVisible}
-              onRequestClose={() => setModalVisible(false)}
-            >
-              <View
-                style={{
-                  marginTop: 50,
-                  padding: 20,
-                  backgroundColor: 'white',
-                  borderRadius: 10,
-                }}
-              >
-                <Text>Edit Title</Text>
-                <TextInput
-                  value={newTitle}
-                  onChangeText={setNewTitle}
-                  placeholder="Enter new title"
-                  style={{ borderBottomWidth: 1, marginBottom: 20 }}
-                />
-                <Button title="Save" onPress={handleEdit} />
-                <Button title="Cancel" onPress={() => setModalVisible(false)} />
-              </View>
-            </Modal>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
+          <View className="w-11/12 max-w-md p-6 bg-white rounded-lg shadow-md">
+            <Text className="text-lg font-semibold mb-4">Edit Title</Text>
+            <TextInput
+              value={newTitle}
+              onChangeText={setNewTitle}
+              placeholder="Enter new title"
+              className="border-b border-gray-300 mb-4 py-2"
+            />
+            <View className="flex-row justify-between">
+              <Button title="Save" onPress={handleEdit} />
+              <Button title="Cancel" onPress={() => setModalVisible(false)} />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
