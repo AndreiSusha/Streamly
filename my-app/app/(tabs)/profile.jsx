@@ -260,7 +260,7 @@ const Profile = () => {
             </TouchableOpacity>
 
             <View className="w-16 h-16 border border-secondary rounded-lg flex justify-center items-center">
-              <View className="w-full h-full bg-gray-400 rounded-lg flex justify-center items-center">
+              <View className="w-full h-full bg-lime-400 rounded-lg flex justify-center items-center">
                 <Text className="text-white text-xl font-bold">
                   {user?.username?.charAt(0).toUpperCase()}
                 </Text>
