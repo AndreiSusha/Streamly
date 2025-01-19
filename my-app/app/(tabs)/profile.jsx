@@ -291,15 +291,18 @@ const Profile = () => {
           setModalVisible(false);
         }}
       >
-        <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
-          <View className="bg-white rounded-lg p-4 w-4/5">
+        <View className="flex-1 justify-center items-center bg-primary bg-opacity-50">
+          <View className="bg-white rounded-2xl p-4 w-4/5">
             <TextInput
               placeholder="Edit Title"
               value={newTitle}
               onChangeText={setNewTitle}
               className="border border-gray-300 p-2 rounded"
             />
+            <View className="flex flex-row justify-between mt-4">
             <Button title="Save" onPress={handleEdit} />
+            <Button title="Cancel" onPress={() => setModalVisible(false)} />
+            </View>
           </View>
         </View>
       </Modal>
