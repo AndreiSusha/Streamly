@@ -28,39 +28,12 @@ const Profile = () => {
   const [newTitle, setNewTitle] = useState('');
   const [currentMediaId, setCurrentMediaId] = useState('');
 
-  // const fetchUserMediaFiles = async () => {
-  //   try {
-  //     const userId = await AsyncStorage.getItem('userId');
-  //     if (!userId) throw new Error('User ID not found.');
-
-  //     const response = await fetch(
-  //       `http://192.168.1.241:3000/media/user/${userId}`,
-  //       {
-  //         method: 'GET',
-  //         headers: {
-  //           'Content-Type': 'application/json',
-  //         },
-  //       }
-  //     );
-
-  //     if (!response.ok) {
-  //       return [];
-  //     }
-
-  //     const mediaFiles = await response.json();
-  //     return mediaFiles;
-  //   } catch (error) {
-  //     console.error(error.message);
-  //     return [];
-  //   }
-  // };
-
   const fetchUserMediaFiles = async () => {
     try {
       const userId = await AsyncStorage.getItem('userId');
       const token = await AsyncStorage.getItem('token');
       if (!userId || !token) return [];
-  
+
       const response = await fetch(
         `http://192.168.1.241:3000/media/user/${userId}`,
         {
@@ -71,14 +44,15 @@ const Profile = () => {
           },
         }
       );
-  
       if (!response.ok) {
         console.error('Failed to fetch media files', response.status);
-      return [];
-
+        return [];
       }
-  
-      return await response.json();
+
+      const mediaFiles = await response.json();
+      return mediaFiles.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
     } catch (error) {
       console.error(error.message);
       return [];
@@ -100,6 +74,15 @@ const Profile = () => {
       Alert.alert('Error', error.message);
     }
   };
+
+  // const logout = async () => {
+  //   try {
+  //     await AsyncStorage.clear();
+  //     router.replace('/login');
+  //   } catch (error) {
+  //     Alert.alert('Error', 'Failed to log out.');
+  //   }
+  // };
 
   const logout = async () => {
     try {
@@ -124,16 +107,6 @@ const Profile = () => {
       Alert.alert('Error', error.message);
     }
   };
-
-  // const logout = async () => {
-  //   try {
-  //     // Clear all AsyncStorage data
-  //     await AsyncStorage.clear();
-  //     router.replace('/login');
-  //   } catch (error) {
-  //     Alert.alert('Error', 'Failed to log out.');
-  //   }
-  // };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -179,7 +152,7 @@ const Profile = () => {
           )
         );
         setModalVisible(false);
-        setNewTitle(''); // Clear the input
+        setNewTitle('');
       } catch (error) {
         Alert.alert('Error', error.message);
       }
@@ -209,8 +182,9 @@ const Profile = () => {
               throw new Error('Failed to delete media.');
             }
 
-            // Update the data state to remove the deleted media
-            setData((prevData) => prevData.filter((item) => item._id !== mediaId));
+            setData((prevData) =>
+              prevData.filter((item) => item._id !== mediaId)
+            );
           } catch (error) {
             Alert.alert('Error', error.message);
           }
@@ -227,16 +201,18 @@ const Profile = () => {
 
   const showActionSheet = (mediaId, title) => {
     const options = ['Edit', 'Delete', 'Cancel'];
+    const cancelButtonIndex = 2;
+
     ActionSheet.showActionSheetWithOptions(
       {
         options,
-        cancelButtonIndex: 2,
+        cancelButtonIndex,
       },
       (buttonIndex) => {
         if (buttonIndex === 0) {
-          openEditModal(mediaId, title); // call openEditModal instead of onEdit
+          openEditModal(mediaId, title);
         } else if (buttonIndex === 1) {
-          handleDelete(mediaId); // call handleDelete function
+          handleDelete(mediaId);
         }
       }
     );
@@ -267,8 +243,7 @@ const Profile = () => {
             username={item.user?.username}
             avatar={item.user?.avatar}
             mediaId={item._id}
-            onDelete={handleDelete}
-            onEdit={() => showActionSheet(item._id, item.title)}
+            onMenuPress={(mediaId, title) => showActionSheet(mediaId, title)}
           />
         )}
         ListHeaderComponent={() => (
@@ -285,27 +260,12 @@ const Profile = () => {
             </TouchableOpacity>
 
             <View className="w-16 h-16 border border-secondary rounded-lg flex justify-center items-center">
-              {user?.username ? (
-                <View className="w-full h-full bg-gray-400 rounded-lg flex justify-center items-center">
-                  <Text className="text-white text-xl font-bold">
-                    {user.username.charAt(0).toUpperCase()}
-                  </Text>
-                </View>
-              ) : (
-                <Image
-                  source={require('../../assets/images/placeholder.png')}
-                  className="w-[90%] h-[90%] rounded-lg"
-                  resizeMode="cover"
-                />
-              )}
+              <View className="w-full h-full bg-gray-400 rounded-lg flex justify-center items-center">
+                <Text className="text-white text-xl font-bold">
+                  {user?.username?.charAt(0).toUpperCase()}
+                </Text>
+              </View>
             </View>
-
-            <InfoBox
-              title={user?.username || 'Loading...'}
-              containerStyles="mt-5"
-              titleStyles="text-lg"
-            />
-
             <View className="mt-5 flex flex-row">
               <InfoBox
                 title={data.length}
@@ -317,42 +277,30 @@ const Profile = () => {
             </View>
           </View>
         )}
-        ListEmptyComponent={() =>
-          !isLoading && (
-            <EmptyState
-              title="No Posts Found"
-              subtitle="No posts have been uploaded yet."
-            />
-          )
-          
-        }
+        ListEmptyComponent={<EmptyState />}
         refreshControl={
-                  <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       />
-      {/* Modal for Editing Title */}
+
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => {
+          setModalVisible(false);
+        }}
       >
-        <View
-          style={{
-            marginTop: 50,
-            padding: 20,
-            backgroundColor: 'white',
-            borderRadius: 10,
-          }}
-        >
-          <Text>Edit Title</Text>
-          <TextInput
-            value={newTitle}
-            onChangeText={setNewTitle}
-            placeholder="Enter new title"
-            style={{ borderBottomWidth: 1, marginBottom: 20 }}
-          />
-          <Button title="Save" onPress={handleEdit} />
-          <Button title="Cancel" onPress={() => setModalVisible(false)} />
+        <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
+          <View className="bg-white rounded-lg p-4 w-4/5">
+            <TextInput
+              placeholder="Edit Title"
+              value={newTitle}
+              onChangeText={setNewTitle}
+              className="border border-gray-300 p-2 rounded"
+            />
+            <Button title="Save" onPress={handleEdit} />
+          </View>
         </View>
       </Modal>
     </SafeAreaView>
