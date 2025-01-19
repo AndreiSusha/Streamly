@@ -300,8 +300,8 @@ const Profile = () => {
               className="border border-gray-300 p-2 rounded"
             />
             <View className="flex flex-row justify-between mt-4">
-            <Button title="Save" onPress={handleEdit} />
             <Button title="Cancel" onPress={() => setModalVisible(false)} />
+            <Button title="Save" onPress={handleEdit} />
             </View>
           </View>
         </View>
