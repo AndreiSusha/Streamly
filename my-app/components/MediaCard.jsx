@@ -23,7 +23,7 @@ const MediaCard = ({
                 resizeMode="cover"
               />
             ) : (
-              <View className="w-full h-full bg-gray-400 rounded-lg flex justify-center items-center">
+              <View className="w-full h-full bg-lime-400 rounded-lg flex justify-center items-center">
                 <Text className="text-white font-bold">
                   {getInitials(username)}
                 </Text>
