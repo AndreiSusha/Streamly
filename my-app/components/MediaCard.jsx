@@ -1,29 +1,15 @@
-import { View, Text, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { icons } from '../constants';
-import ActionSheet from 'react-native-action-sheet';
 
-const MediaCard = ({ title, filename, username, avatar, mediaId, onDelete, onEdit, ownerId, currentUser }) => {
-  const isOwner = currentUser && currentUser.id === ownerId;
-  // console.log('MediaCard:', { title, username, avatar, mediaId, ownerId, currentUser });
+const MediaCard = ({
+  title,
+  filename,
+  username,
+  avatar,
+  mediaId,
+  onMenuPress,
+}) => {
   const getInitials = (name) => (name ? name.charAt(0).toUpperCase() : '?');
-
-  const showActionSheet = () => {
-    if (!isOwner) return; 
-    const options = ['Edit', 'Delete', 'Cancel'];
-    ActionSheet.showActionSheetWithOptions(
-      {
-        options,
-        cancelButtonIndex: 2,
-      },
-      (buttonIndex) => {
-        if (buttonIndex === 0 && onEdit) {
-          onEdit(mediaId, title);
-        } else if (buttonIndex === 1 && onDelete) {
-          onDelete(mediaId);
-        }
-      }
-    );
-  };
 
   return (
     <View className="flex-col items-center px-4 mb-14">
@@ -38,7 +24,9 @@ const MediaCard = ({ title, filename, username, avatar, mediaId, onDelete, onEdi
               />
             ) : (
               <View className="w-full h-full bg-gray-400 rounded-lg flex justify-center items-center">
-                <Text className="text-white font-bold">{getInitials(username)}</Text>
+                <Text className="text-white font-bold">
+                  {getInitials(username)}
+                </Text>
               </View>
             )}
           </View>
@@ -57,13 +45,18 @@ const MediaCard = ({ title, filename, username, avatar, mediaId, onDelete, onEdi
             </Text>
           </View>
         </View>
-        {isOwner && (
+
         <View className="pt-2">
-          <TouchableOpacity onPress={showActionSheet}>
-            <Image source={icons.menu} className="w-5 h-5" resizeMode="contain" />
-          </TouchableOpacity>
-        </View>
-        )}
+  {onMenuPress && (
+    <TouchableOpacity onPress={() => onMenuPress(mediaId, title)}>
+      <Image
+        source={icons.menu}
+        className="w-5 h-5"
+        resizeMode="contain"
+      />
+    </TouchableOpacity>
+  )}
+</View>
       </View>
 
       <TouchableOpacity
